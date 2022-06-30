@@ -458,9 +458,11 @@ def run_search(temp_dir, planner=DEFAULT_PLANNER, max_planner_time=DEFAULT_MAX_T
             safe_remove(os.path.join(temp_path, filename))
 
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, cwd=None, close_fds=True)
-    output, error = proc.communicate()
-    #if proc.returncode not in [0, 12]: # Good: [0, 12] | Bad: [127]
-    #    raise RuntimeError(proc.returncode)
+    try:
+        output, error = proc.communicate(timeout=2)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        return None, "Inf"
 
     if USE_FORBID:
         for filename in os.listdir(FORBID_PATH):
